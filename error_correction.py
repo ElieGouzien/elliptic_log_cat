@@ -805,8 +805,9 @@ class AliceAndBob2(ToffoliBasedCode):
     def _single_qubit_err(params: Params, k1_k2):
         """Logical error for 1 qubit by cycle."""
         d, n = params.low_level.d, params.low_level.n
-        err = (0.092*(16*sqrt(k1_k2))**((d+1)//2)
-               + 2*(d**2)*(5.58*sqrt(k1_k2) + 1.68*k1_k2)*exp(-2*n))
+        k1_k2_th = 1.3e-2
+        err = (5.6e-2*(n**0.86 * k1_k2 / k1_k2_th)**((d+1)//2)
+               + 2*(d-1)*0.5*exp(-2*n))
         if err > 1:
             raise RuntimeError("Error formula used outside of its domain!")
         return err

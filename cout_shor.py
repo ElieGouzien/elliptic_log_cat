@@ -252,7 +252,7 @@ def _print_tableau_rsa_alicebob2(base_params: Params):
         warn("Warning, parameters not compatible with the table; "
              "columns might not correspond to what is expected!")
     entetes = ["$n$", '$n_e$', "$m$", "$w_e$", "$w_m$", r"$\abs{\alpha}^2$",
-               "$d$", "$d_1$", r"$n_{\text{qubits}}$", "$t$",
+               "$d$", "$i$", r"$n_{\text{qubits}}$", "$t$",
                r"$t_{\text{exp}}$", "logical qubits"]
     _print_tableau([6, 8, 16, 128, 256, 512, 829, 1024, 2048],
                    [10] + [1]*8, base_params,
@@ -269,7 +269,7 @@ def _print_tableau_elliptic_log2(base_params: Params):
     warn("Warning, for small n values, magical state preparation parameters "
          "might not be adapted (too much precision)!")
     entetes = ["$n$", '$n_e$', "$w_e$", "$w_m$", r"$\abs{\alpha}^2$", "$d$",
-               "$d_1$", r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
+               "$i$", r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
                "logical qubits"]
     _print_tableau([8, 16, 32, 64, 128, 256, 512], [1]*7, base_params,
                    entree_tableau_elliptic_log2, entetes, skip_size=(9, 10),

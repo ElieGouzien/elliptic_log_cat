@@ -203,8 +203,9 @@ def entree_tableau_rsa_alicebob2(params: Params):
     cost, qubits = prepare_ressources(params)
     return [params.algo.n, err_corr.ne, params.algo.c, params.algo.we,
             params.algo.wm, params.low_level.n, params.low_level.d,
-            params.low_level.d1, qubits, format_time(cost.t),
-            format_time(cost.exp_t), logical_qubits(params, False)]
+            params.low_level.d1, err_corr._nb_factory, err_corr._factory_qubits,
+            qubits, format_time(cost.t), format_time(cost.exp_t),
+            logical_qubits(params, False)]
 
 
 def entree_tableau_elliptic_log2(params: Params):
@@ -213,7 +214,8 @@ def entree_tableau_elliptic_log2(params: Params):
     cost, qubits = prepare_ressources(params)
     return [params.algo.n, err_corr.ne, params.algo.we, params.algo.wm,
             params.low_level.n, params.low_level.d, params.low_level.d1,
-            qubits, format_time(cost.t), format_time(cost.exp_t),
+            err_corr._nb_factory, err_corr._factory_qubits, qubits,
+            format_time(cost.t), format_time(cost.exp_t),
             logical_qubits(params, False)]
 
 
@@ -252,12 +254,13 @@ def _print_tableau_rsa_alicebob2(base_params: Params):
         warn("Warning, parameters not compatible with the table; "
              "columns might not correspond to what is expected!")
     entetes = ["$n$", '$n_e$', "$m$", "$w_e$", "$w_m$", r"$\abs{\alpha}^2$",
-               "$d$", "$i$", r"$n_{\text{qubits}}$", "$t$",
-               r"$t_{\text{exp}}$", "logical qubits"]
+               "$d$", "$i$", r"$\#\text{factories}$", "factories qubits",
+               r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
+               "logical qubits"]
     _print_tableau([6, 8, 16, 128, 256, 512, 829, 1024, 2048],
                    [10] + [1]*8, base_params,
                    entree_tableau_rsa_alicebob2,
-                   entetes, skip_size=(9, 10), seps=(2, 4))
+                   entetes, skip_size=(11, 12), seps=(2, 9))
 
 
 def _print_tableau_elliptic_log2(base_params: Params):
@@ -269,10 +272,11 @@ def _print_tableau_elliptic_log2(base_params: Params):
     warn("Warning, for small n values, magical state preparation parameters "
          "might not be adapted (too much precision)!")
     entetes = ["$n$", '$n_e$', "$w_e$", "$w_m$", r"$\abs{\alpha}^2$", "$d$",
-               "$i$", r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
+               "$i$", r"$\#\text{factories}$", "factories qubits",
+               r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
                "logical qubits"]
     _print_tableau([8, 16, 32, 64, 128, 256, 512], [1]*7, base_params,
-                   entree_tableau_elliptic_log2, entetes, skip_size=(9, 10),
+                   entree_tableau_elliptic_log2, entetes, skip_size=(10, 11),
                    seps=(2, 8))
 
 

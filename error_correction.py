@@ -847,77 +847,92 @@ class AliceAndBob2(ToffoliBasedCode):
         t_cnot = 0.25*params.low_level.tc
         if params.low_level.d1 == 0:
             d1 = 3
-            err_prob = 5.25e-4
+            n1 = 5.42
+            err_prob = 1.05e-3
             time = 19 * t_cnot
-            accept_prob = 8.4e-1
+            accept_prob = 84e-2
         elif params.low_level.d1 == 1:
             d1 = 3
-            err_prob = 5.12e-5
+            n1 = 5.60
+            err_prob = 1.02e-4
             time = 25 * t_cnot
             accept_prob = 7.45e-1
         elif params.low_level.d1 == 2:
             d1 = 3
-            err_prob = 4.07e-5
+            n1 = 6.99
+            err_prob = 8.14e-5
             time = 31 * t_cnot
             accept_prob = 6.6e-1
         elif params.low_level.d1 == 3:
             d1 = 5
-            err_prob = 2.31e-6
+            n1 = 8.82
+            err_prob = 4.62e-6
             time = 38 * t_cnot
             accept_prob = 4.56e-1
         elif params.low_level.d1 == 4:
             d1 = 5
-            err_prob = 3.5e-7
+            n1 = 9.85
+            err_prob = 7e-7
             time = 45 * t_cnot
             accept_prob = 3.62e-1
         elif params.low_level.d1 == 5:
             d1 = 5
-            err_prob = 2.68e-7
+            n1 = 10.05
+            err_prob = 5.36e-7
             time = 52 * t_cnot
             accept_prob = 2.88e-1
         elif params.low_level.d1 == 6:
             d1 = 7
-            err_prob = 3.07e-8
+            n1 = 11.38
+            err_prob = 6.14e-8
             time = 61 * t_cnot
             accept_prob = 1.48e-1
         elif params.low_level.d1 == 7:
             d1 = 7
-            err_prob = 7.00e-9
+            n1 = 12.43
+            err_prob = 8.40e-9
             time = 69 * t_cnot
             accept_prob = 1.05e-1
         elif params.low_level.d1 == 8:
             d1 = 7
-            err_prob = 6.00e-9
+            n1 = 12.73
+            err_prob = 5.16e-9
             time = 77 * t_cnot
             accept_prob = 7.27e-2
         elif params.low_level.d1 == 9:
             d1 = 9
-            err_prob = 1.14e-9
+            n1 = 13.32
+            err_prob = 2.28e-9
             time = 88 * t_cnot
             accept_prob = 2.62e-2
         elif params.low_level.d1 == 10:
             d1 = 9
-            err_prob = 1.15e-10
+            n1 = 14.51
+            err_prob = 2.3e-10
             time = 97 * t_cnot
             accept_prob = 1.54e-2
         elif params.low_level.d1 == 11:
             d1 = 9
-            err_prob = 3.68e-11
+            n1 = 15.12
+            err_prob = 7.36e-11
             time = 106 * t_cnot
             accept_prob = 9.75e-3
         elif params.low_level.d1 == 12:
             d1 = 19
-            err_prob = 3.95e-12
+            n1 = 19.03
+            err_prob = 7.90e-12
             time = 9665 * t_cnot
             accept_prob = 1
         elif params.low_level.d1 == 13:
             d1 = 21
-            err_prob = 2.70e-13
+            n1 = 20.61
+            err_prob = 5.40e-13
             time = 14239 * t_cnot
             accept_prob = 1
         elif params.low_level.d1 == 14:
             d1 = 23
-            err_prob = 1.87e-14
+            n1 = 22.2
+            err_prob = 3.74e-14
             time = 21531 * t_cnot
             accept_prob = 1
         else:
@@ -941,6 +956,9 @@ class AliceAndBob2(ToffoliBasedCode):
         teleport = self._teleport()
         self.toffoli = PhysicalCost(factory.p, 0) + teleport + (
             (log_qubits-3) * 4.5 * PhysicalCost(err, 0))
+        # Record for table nb factories and total qubit number in it
+        self._factory_qubits = factory_qubits
+        self._nb_factory = nb_factory
         # Processor properties
         nb_horizon_routing_log_qubits = ceil((log_qubits+nb_factory)/2) + 1
         routing_qubits = ((d + d-1)*(nb_horizon_routing_log_qubits)

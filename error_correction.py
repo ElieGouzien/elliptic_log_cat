@@ -847,93 +847,93 @@ class AliceAndBob2(ToffoliBasedCode):
         t_cnot = 0.25*params.low_level.tc
         if params.low_level.d1 == 0:
             d1 = 3
-            n1 = 5.42
+            n1 = 3.75
             err_prob = 1.05e-3
-            time = 19 * t_cnot
+            time = 23 * t_cnot
             accept_prob = 84e-2
         elif params.low_level.d1 == 1:
             d1 = 3
-            n1 = 5.60
+            n1 = 3.93
             err_prob = 1.02e-4
-            time = 25 * t_cnot
+            time = 29 * t_cnot
             accept_prob = 7.45e-1
         elif params.low_level.d1 == 2:
             d1 = 3
-            n1 = 6.99
+            n1 = 5.32
             err_prob = 8.14e-5
-            time = 31 * t_cnot
+            time = 35 * t_cnot
             accept_prob = 6.6e-1
         elif params.low_level.d1 == 3:
             d1 = 5
-            n1 = 8.82
+            n1 = 7.15
             err_prob = 4.62e-6
-            time = 38 * t_cnot
+            time = 46 * t_cnot
             accept_prob = 4.56e-1
         elif params.low_level.d1 == 4:
             d1 = 5
-            n1 = 9.85
+            n1 = 8.18
             err_prob = 7e-7
-            time = 45 * t_cnot
+            time = 53 * t_cnot
             accept_prob = 3.62e-1
         elif params.low_level.d1 == 5:
             d1 = 5
-            n1 = 10.05
+            n1 = 8.38
             err_prob = 5.36e-7
-            time = 52 * t_cnot
+            time = 60 * t_cnot
             accept_prob = 2.88e-1
         elif params.low_level.d1 == 6:
             d1 = 7
-            n1 = 11.38
+            n1 = 9.71
             err_prob = 6.14e-8
-            time = 61 * t_cnot
+            time = 73 * t_cnot
             accept_prob = 1.48e-1
         elif params.low_level.d1 == 7:
             d1 = 7
-            n1 = 12.43
+            n1 = 10.76
             err_prob = 8.40e-9
-            time = 69 * t_cnot
+            time = 81 * t_cnot
             accept_prob = 1.05e-1
         elif params.low_level.d1 == 8:
             d1 = 7
-            n1 = 12.73
+            n1 = 11.06
             err_prob = 5.16e-9
-            time = 77 * t_cnot
+            time = 89 * t_cnot
             accept_prob = 7.27e-2
         elif params.low_level.d1 == 9:
             d1 = 9
-            n1 = 13.32
+            n1 = 11.64
             err_prob = 2.28e-9
-            time = 88 * t_cnot
+            time = 104 * t_cnot
             accept_prob = 2.62e-2
         elif params.low_level.d1 == 10:
             d1 = 9
-            n1 = 14.51
+            n1 = 12.83
             err_prob = 2.3e-10
-            time = 97 * t_cnot
+            time = 113 * t_cnot
             accept_prob = 1.54e-2
         elif params.low_level.d1 == 11:
             d1 = 9
-            n1 = 15.12
+            n1 = 13.44
             err_prob = 7.36e-11
-            time = 106 * t_cnot
+            time = 122 * t_cnot
             accept_prob = 9.75e-3
         elif params.low_level.d1 == 12:
             d1 = 19
-            n1 = 19.03
+            n1 = 17.35
             err_prob = 7.90e-12
-            time = 9665 * t_cnot
+            time = 9576 * t_cnot
             accept_prob = 1
         elif params.low_level.d1 == 13:
             d1 = 21
-            n1 = 20.61
+            n1 = 18.94
             err_prob = 5.40e-13
-            time = 14239 * t_cnot
+            time = 14112 * t_cnot
             accept_prob = 1
         elif params.low_level.d1 == 14:
             d1 = 23
-            n1 = 22.2
+            n1 = 20.53
             err_prob = 3.74e-14
-            time = 21531 * t_cnot
+            time = 21344 * t_cnot
             accept_prob = 1
         else:
             raise ValueError("'d1' is here used as an index in range(15).")

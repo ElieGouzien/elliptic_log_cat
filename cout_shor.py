@@ -293,11 +293,11 @@ if __name__ == '__main__':
     params = Params('alice&bob2',
                     AlgoOpts(prob='elliptic_log', algo='Shor', s=None, n=256,
                              windowed=True, parallel_cnots=True),
-                    LowLevelOpts(tc=500e-9, tr=None))
+                    LowLevelOpts(tc=500e-9))
 
     # params = Params('alice&bob2',
     #                 AlgoOpts(n=2048, windowed=True, parallel_cnots=True),
-    #                 LowLevelOpts(tc=500e-9, tr=None))
+    #                 LowLevelOpts(tc=500e-9))
 
     print("\n"*2)
     print("Windowed arithmetics")

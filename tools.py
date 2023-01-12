@@ -42,7 +42,7 @@ Parameters:
 """)
 
 LowLevelOpts = namedtuple('LowLevelOpts', 'debitage, d1, d2, d, n, tc, tr, pp',
-                          defaults=(2, None, None, None, None, 1e-6, 1e-6,
+                          defaults=(2, None, None, None, None, 1e-6, None,
                                     1e-3))
 LowLevelOpts.__doc__ = """LowLevelOpts(debitage, d1, d2, d, n, tc, tr, pp)
 

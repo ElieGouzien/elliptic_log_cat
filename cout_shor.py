@@ -17,17 +17,9 @@ from tools import AlgoOpts, LowLevelOpts, Params, PhysicalCost
 from error_correction import ErrCorrCode, logical_qubits
 import error_correction
 
-
 warnings.simplefilter("always", UserWarning)
 
-# Use only TQDM when executed within IPython
-try:
-    if not __IPYTHON__:
-        raise NameError("Artifice")
-    IPYTHON = True
-except NameError:
-    IPYTHON = False
-PB_DEF = True  # Default behaviour for progress bars.
+PB_DEF = True  # Défaut des barres de progression.
 
 
 # %% Optimisation
@@ -301,11 +293,11 @@ if __name__ == '__main__':
     params = Params('alice&bob2',
                     AlgoOpts(prob='elliptic_log', algo='Shor', s=None, n=256,
                              windowed=True, parallel_cnots=True),
-                    LowLevelOpts(tc=500e-9, tr=500e-9))
+                    LowLevelOpts(tc=500e-9, tr=None))
 
     # params = Params('alice&bob2',
     #                 AlgoOpts(n=2048, windowed=True, parallel_cnots=True),
-    #                 LowLevelOpts(tc=500e-9, tr=500e-9))
+    #                 LowLevelOpts(tc=500e-9, tr=None))
 
     print("\n"*2)
     print("Windowed arithmetics")

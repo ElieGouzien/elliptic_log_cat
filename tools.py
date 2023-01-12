@@ -84,6 +84,7 @@ class PhysicalCost(namedtuple('PhysicalCost', ('p', 't'))):
         a + b : cost of serial execution of a and b.
         k * a : cost of serial execution of a k times (k can be float).
         a | b : cost of parallel execution of a and b.
+        k | b : cost of k parallel executions of b.
     """
 
     def __add__(self, other):

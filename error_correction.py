@@ -796,18 +796,18 @@ class AliceAndBob2(ToffoliBasedCode):
         self._set_clifford_costs(err, log_qubits)
         # Toffoli : measurement + teleportation
         teleport = self._teleport()
-        factory, factory_qubits, nb_factory = self._toffoli_state_mesurement(
+        factory, nb_factory, factory_dist = self._toffoli_state_mesurement(
             params, teleport.t)
-        self._set_toffoli_teleportation(log_qubits, err,
-                                        factory, factory_qubits, nb_factory)
+        self._set_toffoli(log_qubits, err, factory)
+        self._set_physical_qubits(log_qubits, nb_factory, factory_dist)
 
     @staticmethod
     def _single_qubit_err(params: Params, k1_k2):
-        """Logical error for 1 qubit by cycle."""
+        """Logical error for 1 qubit by logical cycle."""
         d, n = params.low_level.d, params.low_level.n
         k1_k2_th = 1.3e-2
-        err = (5.6e-2*(n**0.86 * k1_k2 / k1_k2_th)**((d+1)//2)
-               + 2*(d-1)*0.5*exp(-2*n))
+        err = d*(5.6e-2*(n**0.86 * k1_k2 / k1_k2_th)**((d+1)//2)
+                 + 2*(d-1)*0.5*exp(-2*n))
         if err > 1:
             raise RuntimeError("Error formula used outside of its domain!")
         return err
@@ -821,18 +821,21 @@ class AliceAndBob2(ToffoliBasedCode):
         """
         d, tc = self.params.low_level.d, self.params.low_level.tc
         time = tc*d  # time for fault-tolerant error correction
-        err_2 = 1 - (1 - err)**2
-        err_3 = 1 - (1 - err)**3
-        # Cost of physical gates (0.25 : time for 1 physical gate)
-        self.gate1 = PhysicalCost(err, 0.25*tc + time) + (
-            (log_qubits-1) * PhysicalCost(err, 0))
-        self.cnot = PhysicalCost(err_2, 0.25*tc + 3*time) + (
-            (log_qubits-2) * PhysicalCost(err_3, 0))  # CNOT + merge + split
+        nothing_1 = PhysicalCost(err, 0)
+        self.init = PhysicalCost(err, 0.2*tc + time) + (
+            (log_qubits-1)*nothing_1)
+        # Overestimate time and error for measurement
+        self.mesure = PhysicalCost(err, tc) + ((log_qubits-1)*nothing_1)
+        # Cost of physical gates (0.2 : time for 1 physical gate)
+        self.gate1 = PhysicalCost(err, 0.2*tc + time) + (
+            (log_qubits-1)*nothing_1)
+        # CNOT : see fig.25 (arXiv version)
+        # Note : not exect as ancillary larger than d
+        self.cnot = (self.init + 2*nothing_1  # prepare |0>
+                     + PhysicalCost(1 - (1 - err)**2, time) + nothing_1  # XX
+                     + self.mesure + 2*nothing_1  # Z measurement
+                     + (log_qubits-2)*nothing_1)
         # CZ are considered as costly as CNOT (not a lot in the algorithm)
-        self.init = PhysicalCost(err, time) + (
-            (log_qubits-1)*PhysicalCost(err, 0))
-        self.mesure = PhysicalCost(err, self.params.low_level.tr + tc) + (
-            (log_qubits-1)*PhysicalCost(err, 0))
         # Processor properties
         self.correct_time = time
 
@@ -844,129 +847,168 @@ class AliceAndBob2(ToffoliBasedCode):
     @staticmethod
     def _toffoli_state_mesurement(params: Params, final_time):
         """Cost of measurement-based preparation of Toffoli magical state."""
-        t_cnot = 0.25*params.low_level.tc
         if params.low_level.d1 == 0:
             d1 = 3
             n1 = 3.75
             err_prob = 1.05e-3
-            time = 23 * t_cnot
+            time_steps = 23
+            time = 54.7e-6
             accept_prob = 84e-2
         elif params.low_level.d1 == 1:
             d1 = 3
             n1 = 3.93
             err_prob = 1.02e-4
-            time = 29 * t_cnot
+            time_steps = 29
+            time = 65.8e-6
             accept_prob = 7.45e-1
         elif params.low_level.d1 == 2:
             d1 = 3
             n1 = 5.32
             err_prob = 8.14e-5
-            time = 35 * t_cnot
+            time_steps = 35
+            time = 58.7e-6
             accept_prob = 6.6e-1
         elif params.low_level.d1 == 3:
             d1 = 5
             n1 = 7.15
             err_prob = 4.62e-6
-            time = 46 * t_cnot
+            time_steps = 46
+            time = 57.4e-6
             accept_prob = 4.56e-1
         elif params.low_level.d1 == 4:
             d1 = 5
             n1 = 8.18
             err_prob = 7e-7
-            time = 53 * t_cnot
+            time_steps = 53
+            time = 57.8e-6
             accept_prob = 3.62e-1
         elif params.low_level.d1 == 5:
             d1 = 5
             n1 = 8.38
             err_prob = 5.36e-7
-            time = 60 * t_cnot
+            time_steps = 60
+            time = 63.9e-6
             accept_prob = 2.88e-1
         elif params.low_level.d1 == 6:
             d1 = 7
             n1 = 9.71
             err_prob = 6.14e-8
-            time = 73 * t_cnot
+            time_steps = 73
+            time = 67.1e-6
             accept_prob = 1.48e-1
         elif params.low_level.d1 == 7:
             d1 = 7
             n1 = 10.76
             err_prob = 8.40e-9
-            time = 81 * t_cnot
+            time_steps = 81
+            time = 67.2e-6
             accept_prob = 1.05e-1
         elif params.low_level.d1 == 8:
             d1 = 7
             n1 = 11.06
             err_prob = 5.16e-9
-            time = 89 * t_cnot
+            time_steps = 89
+            time = 71.8e-6
             accept_prob = 7.27e-2
         elif params.low_level.d1 == 9:
             d1 = 9
             n1 = 11.64
             err_prob = 2.28e-9
-            time = 104 * t_cnot
+            time_steps = 104
+            time = 79.7e-6
             accept_prob = 2.62e-2
         elif params.low_level.d1 == 10:
             d1 = 9
             n1 = 12.83
             err_prob = 2.3e-10
-            time = 113 * t_cnot
+            time_steps = 113
+            time = 78.6e-6
             accept_prob = 1.54e-2
         elif params.low_level.d1 == 11:
             d1 = 9
             n1 = 13.44
             err_prob = 7.36e-11
-            time = 122 * t_cnot
+            time_steps = 122
+            time = 81e-6
             accept_prob = 9.75e-3
         elif params.low_level.d1 == 12:
             d1 = 19
             n1 = 17.35
             err_prob = 7.90e-12
-            time = 9576 * t_cnot
+            time_steps = 9576
+            time = 4.92e-3
             accept_prob = 1
         elif params.low_level.d1 == 13:
             d1 = 21
             n1 = 18.94
             err_prob = 5.40e-13
-            time = 14112 * t_cnot
+            time_steps = 14112
+            time = 6.65e-3
             accept_prob = 1
         elif params.low_level.d1 == 14:
             d1 = 23
             n1 = 20.53
             err_prob = 3.74e-14
-            time = 21344 * t_cnot
+            time_steps = 21344
+            time = 9.27e-3
             accept_prob = 1
         else:
             raise ValueError("'d1' is here used as an index in range(15).")
-        nb_qubits = d1 + 3*d1 + 3*(d1-1)
         nb_factory = ceil(time / (final_time * accept_prob))
-        nb_qubits_total = nb_qubits * nb_factory
-        return PhysicalCost(err_prob, final_time), nb_qubits_total, nb_factory
+        return (PhysicalCost(err_prob, time/(nb_factory*accept_prob)),
+                nb_factory, d1)
 
-    def _set_toffoli_teleportation(self, log_qubits, err,
-                                   factory, factory_qubits, nb_factory):
-        """Set cost of toffoli gate, and number of qubits.
+    def _set_toffoli(self, log_qubits, err, factory):
+        """Set cost of toffoli gate.
 
         log_qubits : number of logical qubits.
-        err : error by logical qubit and cycle.
+        err : error by logical qubit and logical cycle.
         factory : physical cost of magical state factory.
-        factory_qubits : number of qubits in all magical state factories.
+        """
+        d, tc = self.params.low_level.d, self.params.low_level.tc
+        time = d*tc
+        teleport = self._teleport()
+        self.toffoli = (PhysicalCost(factory.p, 0) + teleport
+                        + (log_qubits-3)*(teleport.t/time)*PhysicalCost(err, 0))
+
+    @staticmethod
+    def _count_qubits(dist, block_size, nb_log_qubits):
+        """Count number of qubits, with routing qubits.
+
+        Assumes that qubits follow our layout, with blocs of some size.
+        Generic function for counting compte and routing qubits that can be used
+        both for the main part of processor and for the factories.
+
+        dist : code distance.
+        block_size : number of logical qubits by blocs.
+        nb_log_qubits : nomber of logical qubits.
+        """
+        # d data qubits ; d-1 ancillary qubits
+        compute_qubits = (dist + dist-1)*nb_log_qubits
+        # Routing qubits
+        nb_horizon_routing_log_qubits = ceil(nb_log_qubits/block_size) + 1
+        routing_qubits = (
+            (dist + dist-1)*nb_horizon_routing_log_qubits
+            + 2*(3*(nb_log_qubits + nb_horizon_routing_log_qubits) - 1))
+        return compute_qubits, routing_qubits
+
+    def _set_physical_qubits(self, log_qubits, nb_factory, factory_dist):
+        """Set the number of qubits.
+
+        log_qubits : number of logical qubits.
         nb_factory : number of factories.
+        factory_dist : distance inside factories.
         """
         d = self.params.low_level.d
-        teleport = self._teleport()
-        self.toffoli = PhysicalCost(factory.p, 0) + teleport + (
-            (log_qubits-3) * 4.5 * PhysicalCost(err, 0))
         # Record for table nb factories and total qubit number in it
-        self._factory_qubits = factory_qubits
         self._nb_factory = nb_factory
-        # Processor properties
-        nb_horizon_routing_log_qubits = ceil((log_qubits+nb_factory)/2) + 1
-        routing_qubits = ((d + d-1)*(nb_horizon_routing_log_qubits)
-                          + 2*(3*(log_qubits + 4*nb_factory
-                                  + nb_horizon_routing_log_qubits) - 1))
-        # d data qubits ; d-1 ancillary qubits
-        self.proc_qubits = ((d + d-1)*log_qubits + factory_qubits
-                            + routing_qubits)
+        factory_qubits = sum(self._count_qubits(factory_dist, 4, 4*nb_factory))
+        self._factory_qubits = factory_qubits
+        # Processeur except factories
+        proc_only_qubits = sum(self._count_qubits(d, 2, log_qubits))
+        # Remove qubits counted 2 times
+        d_min = min(d, factory_dist)
+        self.proc_qubits = factory_qubits + proc_only_qubits - d_min*(d_min-1)
 
     def look_unlookup(self, w=None, n=None):
         """Cost of lookup and unlookup (measurement-based or not)."""

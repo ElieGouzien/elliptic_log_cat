@@ -29,8 +29,8 @@ DEF_RANGES = {'alice&bob2': dict(d1s=range(15),  # only indexes
                                  ds=range(1, 28, 2),
                                  # cat average photon number, continuous!
                                  ns=range(1, 25, 1),
-                                 wes=range(1, 30),
-                                 wms=range(1, 15),
+                                 wes=range(2, 30),
+                                 wms=range(2, 15),
                                  cs=range(1, 40)),
               None: dict(d1s=(None,),
                          d2s=(None,),
@@ -88,6 +88,9 @@ def iterate(base_params: Params, progress=PB_DEF, **kwargs):
     for d1, d2, d, n, we, wm, c in iterator:
         if (base_params.algo.prob == 'rsa'  # we and wm have same role.
                 and wm is not None and we is not None and wm > we):
+            continue
+        # Elliptic curve addition trick require one more qubit in we.
+        if (base_params.algo.prob == 'elliptic_log' and we == 2):
             continue
         yield base_params._replace(
             algo=base_params.algo._replace(we=we, wm=wm, c=c),

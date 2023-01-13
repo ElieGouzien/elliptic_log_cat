@@ -255,7 +255,7 @@ class ErrCorrCode(ABC):
     def semi_classical_add_nomod(self, n=None):
         """Semi-classical addition, with output carry."""
         if not n >= 2:
-            raise ValueError("For this adder, n >= 2")
+            raise ValueError("For this adder, n >= 2.")
         return ((n-2)*(self.semi_classical_maj + self.semi_classical_uma)
                 + 1.5*self.cnot + 1*self.gate1 + self.and_gate)
 
@@ -263,6 +263,8 @@ class ErrCorrCode(ABC):
         """Cost of controlled semi-classical addition."""
         if n is None:  # coset representation
             n = self.params.algo.n + self.params.algo.c
+        if not n >= 2:
+            raise ValueError("For this addition implementation, n >= 2.")
         return ((n-2)*(self.semi_classical_ctrl_maj
                        + self.semi_classical_ctrl_uma)
                 + 2*self.cnot + 0.5*self.and_deand)
@@ -273,6 +275,8 @@ class ErrCorrCode(ABC):
 
     def semi_classical_ctrl_add_nomod(self, n=None):
         """Semi-classical controlled addition, with output carry."""
+        if not n >= 2:
+            raise ValueError("For this addition implementation, n >= 2.")
         return ((n-2)*(self.semi_classical_ctrl_maj
                        + self.semi_classical_ctrl_uma)
                 + self.semi_classical_ctrl_maj
@@ -282,6 +286,8 @@ class ErrCorrCode(ABC):
         """Semi-classical comparison, without use."""
         if n is None:  # coset representation
             n = self.params.algo.n + self.params.algo.c
+        if not n >= 1:
+            raise ValueError("For this comparison implementation, n >= 1.")
         return ((n-1)*(self.semi_classical_maj
                        + self.semi_classical_maj_dag)
                 + self.cnot)
@@ -308,6 +314,8 @@ class ErrCorrCode(ABC):
         """
         if n is None:
             n = self.params.algo.n
+        if not n >= 1:
+            raise ValueError("For this reduction implementation, n >= 1.")
         return ((n-1)*(self.semi_classical_maj
                        + self.semi_classical_ctrl_uma_true)
                 + 1.5*self.gate1 + 2*self.cnot + self.and_gate + self.toffoli)
@@ -358,6 +366,8 @@ class ErrCorrCode(ABC):
         # first NOT is not counted as |1> can be directly initialized.
         if size is None:
             size = floor((self.params.algo.we + self.params.algo.wm)/2)
+        if not size >= 1:
+            raise ValueError("For unary iteration, size >= 1.")
         return self.init + 2*(size-1)*self.cnot + (size-1)*self.and_deand
 
     def unlookup(self, w=None, n=None):

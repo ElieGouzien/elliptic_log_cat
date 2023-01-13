@@ -30,7 +30,7 @@ DEF_RANGES = {'alice&bob2': dict(d1s=range(15),  # only indexes
                                  # cat average photon number, continuous!
                                  ns=range(1, 25, 1),
                                  wes=range(1, 30),
-                                 wms=range(1, 30),
+                                 wms=range(1, 15),
                                  cs=range(1, 40)),
               None: dict(d1s=(None,),
                          d2s=(None,),

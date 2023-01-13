@@ -822,19 +822,19 @@ class AliceAndBob2(ToffoliBasedCode):
         d, tc = self.params.low_level.d, self.params.low_level.tc
         time = tc*d  # time for fault-tolerant error correction
         nothing_1 = PhysicalCost(err, 0)
-        self.init = PhysicalCost(err, 0.2*tc + time) + (
-            (log_qubits-1)*nothing_1)
-        # Overestimate time and error for measurement
-        self.mesure = PhysicalCost(err, tc) + ((log_qubits-1)*nothing_1)
-        # Cost of physical gates (0.2 : time for 1 physical gate)
-        self.gate1 = PhysicalCost(err, 0.2*tc + time) + (
-            (log_qubits-1)*nothing_1)
+        # Note : initialisation of data qubit at same time as ancillae
+        self.init = PhysicalCost(err, time) + (log_qubits-1)*nothing_1
+        # Time of physical measurement : 0.2*tc
+        self.mesure = PhysicalCost(0.2*err/d, 0.2*tc) + (
+            (log_qubits-1)*(0.2/d)*nothing_1)
+        # Note : physical gate at same time as ancillae preparation
+        self.gate1 = PhysicalCost(err, time) + (log_qubits-1)*nothing_1
         # CNOT : see fig.25 (arXiv version)
-        # Note : not exect as ancillary larger than d
+        # Note : not exact as ancillary larger than d
         self.cnot = (self.init + 2*nothing_1  # prepare |0>
                      + PhysicalCost(1 - (1 - err)**2, time) + nothing_1  # XX
-                     + self.mesure + 2*nothing_1  # Z measurement
-                     + (log_qubits-2)*nothing_1)
+                     + self.mesure + 2*(0.2/d)*nothing_1  # Z measurement
+                     + (log_qubits-2)*(2+0.2/d)*nothing_1)
         # CZ are considered as costly as CNOT (not a lot in the algorithm)
         # Processor properties
         self.correct_time = time
@@ -842,7 +842,10 @@ class AliceAndBob2(ToffoliBasedCode):
     def _teleport(self):
         """Cost of teleportation of Toffoli gate."""
         # Not suited for time optimal computation (no use of reaction time).
-        return 3*self.cnot + 1.5*(self.cnot | self.gate1)
+        # One measure similar to parallel measurements (same time and error).
+        # Pauli correction either not applied, either in parallel with CZ.
+        # CZ considered as costly as CNOT.
+        return 3*self.cnot + self.mesure + 1.5*self.cnot
 
     @staticmethod
     def _toffoli_state_mesurement(params: Params, final_time):

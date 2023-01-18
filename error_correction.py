@@ -465,7 +465,7 @@ class ErrCorrCode(ABC):
         return (n*self.add_ctrl_nomod(n+1) + n*self.cnot
                 + n*self.semi_classical_ctrl_add_nomod(n+2)
                 + n*self.rotate(n+2, 1)
-                # Réduction finale :
+                # Final reduction:
                 + self.modular_reduce(n+1))
 
     def mul(self, n=None):
@@ -841,6 +841,7 @@ class AliceAndBob2(ToffoliBasedCode):
         self.gate1 = PhysicalCost(err, time) + (log_qubits-1)*nothing_1
         # CNOT : see fig.25 (arXiv version)
         # Note : not exact as ancillary larger than d
+        # Note : transversal CNOT counted with XX measurement.
         self.cnot = (self.init + 2*nothing_1  # prepare |0>
                      + PhysicalCost(1 - (1 - err)**2, time) + nothing_1  # XX
                      + self.mesure + 2*(0.2/d)*nothing_1  # Z measurement
@@ -989,12 +990,12 @@ class AliceAndBob2(ToffoliBasedCode):
         """Count number of qubits, with routing qubits.
 
         Assumes that qubits follow our layout, with blocs of some size.
-        Generic function for counting compte and routing qubits that can be used
+        Generic function for counting compute and routing qubits that can be used
         both for the main part of processor and for the factories.
 
         dist : code distance.
         block_size : number of logical qubits by blocs.
-        nb_log_qubits : nomber of logical qubits.
+        nb_log_qubits : number of logical qubits.
         """
         # d data qubits ; d-1 ancillary qubits
         compute_qubits = (dist + dist-1)*nb_log_qubits
@@ -1017,7 +1018,7 @@ class AliceAndBob2(ToffoliBasedCode):
         self._nb_factory = nb_factory
         factory_qubits = sum(self._count_qubits(factory_dist, 4, 4*nb_factory))
         self._factory_qubits = factory_qubits
-        # Processeur except factories
+        # Processor except factories
         proc_only_qubits = sum(self._count_qubits(d, 2, log_qubits))
         # Remove qubits counted 2 times
         d_min = min(d, factory_dist)

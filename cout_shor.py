@@ -36,8 +36,8 @@ DEF_RANGES = {'alice&bob2': dict(d1s=range(15),  # only indexes
                          d2s=(None,),
                          ds=(None,),
                          ns=(None,),
-                         wes=range(1, 10),
-                         wms=range(1, 10),
+                         wes=range(2, 10),
+                         wms=range(2, 10),
                          cs=range(1, 40))}
 
 
@@ -90,7 +90,7 @@ def iterate(base_params: Params, progress=PB_DEF, **kwargs):
                 and wm is not None and we is not None and wm > we):
             continue
         # Elliptic curve addition trick require one more qubit in we.
-        if (base_params.algo.prob == 'elliptic_log' and we == 2):
+        if (base_params.algo.prob == 'elliptic_log' and we <= 2):
             continue
         yield base_params._replace(
             algo=base_params.algo._replace(we=we, wm=wm, c=c),

@@ -1,5 +1,5 @@
-Code for computations in [arXiv:????.????](https://arxiv.org/abs/????.????)
-===========================================================================
+Code for computations in [arXiv:2302.06639](https://arxiv.org/abs/2302.06639)
+=============================================================================
 
 
 Computation of resources for elliptic curve discrete logarithm computation with cat qubits

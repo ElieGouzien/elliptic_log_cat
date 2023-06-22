@@ -255,7 +255,7 @@ def _print_tableau_rsa_alicebob2(base_params: Params):
     _print_tableau([6, 8, 16, 128, 256, 512, 829, 1024, 2048],
                    [10] + [1]*8, base_params,
                    entree_tableau_rsa_alicebob2,
-                   entetes, skip_size=(11, 12), seps=(2, 9))
+                   entetes, skip_size=(11, 12), seps=(2, 8))
 
 
 def _print_tableau_elliptic_log2(base_params: Params):
@@ -272,7 +272,7 @@ def _print_tableau_elliptic_log2(base_params: Params):
                "logical qubits"]
     _print_tableau([8, 16, 32, 64, 128, 256, 512], [1]*7, base_params,
                    entree_tableau_elliptic_log2, entetes, skip_size=(10, 11),
-                   seps=(2, 8))
+                   seps=(2, 7))
 
 
 def print_tableau(base_params: Params):

@@ -7,6 +7,7 @@ Tools for describing error correction and cost of logical circuits.
 @author: Élie Gouzien
 """
 from math import exp, floor, ceil, sqrt
+# from math import isclose
 from abc import ABC, abstractmethod
 
 from tools import Params, PhysicalCost
@@ -968,6 +969,8 @@ class AliceAndBob2(ToffoliBasedCode):
             accept_prob = 1
         else:
             raise ValueError("'d1' is here used as an index in range(15).")
+        # t_cnot = 0.2*params.low_level.tc*89.2/n1
+        # assert isclose(time, time_steps * t_cnot, rel_tol=1e-3)
         nb_factory = ceil(time / (final_time * accept_prob))
         return (PhysicalCost(err_prob, time/(nb_factory*accept_prob)),
                 nb_factory, d1)

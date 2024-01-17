@@ -34,7 +34,7 @@ Parameters:
                         (only for type == '3dcolor', otherwise takes by
                          default the obvious option)
     mesure_based_unlookup : unlookup based on measurement?
-                            (only usable for type == 'alice&bob(2)' because |0>
+                            (only usable for type == 'alice&bob(n)' because |0>
                              preparation is long)
     parallel_cnots : CNOT with multiple targets cost as much as a single CNOT?
                      Be careful, it is not a full parallelisation of the CNOTs
@@ -61,7 +61,7 @@ Params = namedtuple('Params', 'type, algo, low_level')
 Params.__doc__ = """Params(type, algo, low_level)
 
 Parameters:
-    type      : type of error correction : 'alice&bob2' or None
+    type      : type of error correction : 'alice&bob2', 'alice&bob3' or None
     algo      : algorithm options, type AlgoOpts
     low_level : low level options, type LowLevelOpts
 """

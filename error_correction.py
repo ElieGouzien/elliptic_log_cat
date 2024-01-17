@@ -29,6 +29,8 @@ class ErrCorrCode(ABC):
         if cls is ErrCorrCode:
             if params.type == 'alice&bob2':
                 return AliceAndBob2(params, *args, **kwargs)
+            elif params.type == 'alice&bob3':
+                return AliceAndBob3(params, *args, **kwargs)
             elif params.type is None:
                 return NoCorrCode(params, *args, **kwargs)
             else:
@@ -827,26 +829,39 @@ class AliceAndBob2(ToffoliBasedCode):
         """Set the cost of the Clifford operation.
 
         err : single logical qubit error.
-        time : time for fault-tolerant error correction.
-        log_qubits : number of logical qubits.
+        log_qubits : nombre de qubits logiques.
+
+        Method shared between all Alice & Bob's architectures.
         """
         d, tc = self.params.low_level.d, self.params.low_level.tc
         time = tc*d  # time for fault-tolerant error correction
+        # NOTE: repetition code: 5 steps in one cycle:
+        #        ancilla preparation, cnot, cooldown to reconverge cats and
+        #        avoid leakage, cnot, and measurement.
+        # NOTE: LDPC code: 9 steps in one cycle (for data qubits):
+        #       1 preparation, 1 cnot, 1 cooldown, 1 cnot, 1 cooldown, 1 cnot,
+        #       1 cooldown, 1 cnot, 1 measure, each taking tc/9.
+        #       Routing and factory qubits use normal repetition code cycle when
+        #       not interacting with data qubits, in 5 steps.
+        nb_steps = {'alice&bob2': 5, 'alice&bob3': 9}[self.params.type]
+        # NOTE: slight overestimation as not all logical qubits are always live.
         nothing_1 = PhysicalCost(err, 0)
-        # Note : initialisation of data qubit at same time as ancillae
+        # Note: no tc/nb_steps as initialisation of data qubit at same time as
+        #       ancillae.
         self.init = PhysicalCost(err, time) + (log_qubits-1)*nothing_1
-        # Time of physical measurement : 0.2*tc
-        self.mesure = PhysicalCost(0.2*err/d, 0.2*tc) + (
-            (log_qubits-1)*(0.2/d)*nothing_1)
-        # Note : physical gate at same time as ancillae preparation
+        # Time of physical measurement : tc
+        self.mesure = (1/d/nb_steps)*PhysicalCost(err, time) + (
+            (log_qubits-1)*(1/d/nb_steps)*nothing_1)
+        # Note: physical gate at same time as ancillae preparation
         self.gate1 = PhysicalCost(err, time) + (log_qubits-1)*nothing_1
-        # CNOT : see fig.25 (arXiv version)
-        # Note : not exact as ancillary larger than d
-        # Note : transversal CNOT counted with XX measurement.
-        self.cnot = (self.init + 2*nothing_1  # prepare |0>
-                     + PhysicalCost(1 - (1 - err)**2, time) + nothing_1  # XX
-                     + self.mesure + 2*(0.2/d)*nothing_1  # Z measurement
-                     + (log_qubits-2)*(2+0.2/d)*nothing_1)
+        # CNOT: see fig.25 (arXiv version)
+        # Note: not exact as ancillary larger than d
+        # Note: transversal CNOT counted with XX measurement.
+        # NOTE: ancilla use repetition code, so always 5 steps when alone
+        self.cnot = (5/nb_steps*self.init + 2*5/nb_steps*nothing_1
+                     + PhysicalCost(1 - (1 - err)**2, time) + nothing_1
+                     + self.mesure + 2*(1/d/nb_steps)*nothing_1
+                     + (log_qubits-2)*(2+1/d/nb_steps)*nothing_1)
         # CZ are considered as costly as CNOT (not a lot in the algorithm)
         # Processor properties
         self.correct_time = time
@@ -862,6 +877,11 @@ class AliceAndBob2(ToffoliBasedCode):
     @staticmethod
     def _toffoli_state_mesurement(params: Params, final_time):
         """Cost of measurement-based preparation of Toffoli magical state."""
+        if not ((params.type == 'alice&bob2' and params.low_level.tc == 500e-9)
+                or (params.type == 'alice&bob3'
+                    and params.low_level.tc == 900e-9)):
+            raise ValueError("100 ns per gate for fast CNOT is hardcoded!")
+        # NOTE: CNOTs in the factory are longer than in  error correction cycle.
         if params.low_level.d1 == 0:
             d1 = 3
             n1 = 3.75
@@ -969,7 +989,8 @@ class AliceAndBob2(ToffoliBasedCode):
             accept_prob = 1
         else:
             raise ValueError("'d1' is here used as an index in range(15).")
-        # t_cnot = 0.2*params.low_level.tc*89.2/n1
+        # nb_steps = {'alice&bob2': 5, 'alice&bob3': 9}[params.type]
+        # t_cnot = params.low_level.tc*89.2/n1/nb_steps
         # assert isclose(time, time_steps * t_cnot, rel_tol=1e-3)
         nb_factory = ceil(time / (final_time * accept_prob))
         return (PhysicalCost(err_prob, time/(nb_factory*accept_prob)),
@@ -1040,6 +1061,49 @@ class AliceAndBob2(ToffoliBasedCode):
         pass
 
 
+class AliceAndBob3(AliceAndBob2):
+    """Cat qubits + LDPC with flip-chip."""
+
+    # Note that self._toffoli_state_mesurement() assumes 500 ns cycle time,
+    # so no need to change it.
+
+    @staticmethod
+    def _single_qubit_err(params: Params, k1_k2):
+        """Logical error for 1 qubit by logical cycle."""
+        d, n = params.low_level.d, params.low_level.n
+        if d != 22 or n != 21:
+            raise ValueError("d=22 and n=21 is hardcoded!")
+        pzl = 4.5e-19
+        pxl = 3.45e-18
+        err = d*(pzl + pxl)  # taking into account d cycles
+        if err > 1:
+            raise RuntimeError("Error formula used outside of its domain!")
+        return err
+
+    def _set_physical_qubits(self, log_qubits, nb_factory, factory_dist):
+        """Set the number of qubits.
+
+        log_qubits : number of logical qubits.
+        nb_factory : number of factories.
+        factory_dist : distance inside factories.
+        """
+        d = self.params.low_level.d
+        # Record for table nb factories and total qubit number in it
+        self._nb_factory = nb_factory
+        # Only routing on one side ; assume that the factories are not stacked
+        # but just next to each other.
+        factory_qubits = ((2*factory_dist-1+3)*4 - 1)*nb_factory
+        self._factory_qubits = factory_qubits
+        # Processor with routing, without factories.
+        if d != 22:
+            raise NotImplementedError("Following code have d=22 hardcoded!")
+        data = data_rout = 4*log_qubits + 29
+        ancilla = 3*log_qubits + 29
+        ancilla_rout = 7*log_qubits/2 + 27
+        proc_only_qubits = data + ancilla + data_rout + ancilla_rout
+        self.proc_qubits = factory_qubits + proc_only_qubits
+
+
 class NoCorrCode(ToffoliBasedCode):
     """No error correction."""
 
@@ -1058,9 +1122,16 @@ class NoCorrCode(ToffoliBasedCode):
 
 
 # %% Ancillary functions related with the algorithm
+# Mapping between type name and class.
+CLASS_MAP = {'alice&bob2': AliceAndBob2,
+             'alice&bob3': AliceAndBob3,
+             None: NoCorrCode
+             }
+
+
 def logical_qubits_exp_mod(params: Params, verb=True):
     """Logical qubits number for modular exponentiation."""
-    toffoli_based = params.type in ('alice&bob2', None)
+    toffoli_based = issubclass(CLASS_MAP[params.type], ToffoliBasedCode)
     if toffoli_based and params.algo.windowed:
         res = (3*params.algo.n + 2*params.algo.c + 2*params.algo.we
                + params.algo.wm - 1)
@@ -1075,7 +1146,7 @@ def logical_qubits_exp_mod(params: Params, verb=True):
 
 def logical_qubits_elliptic_mul(params: Params, verb=True):
     """Logical qubits number for elliptic curve multiplication."""
-    # ancilla_free_add = params.type in ('alice&bob2', None)
+    # ancilla_free_add = issubclass(CLASS_MAP[params.type], ToffoliBasedCode)
     ancilla_free_add = False
     if params.algo.windowed:
         if ancilla_free_add:
@@ -1098,8 +1169,11 @@ def logical_qubits(params: Params, verb=True):
     Autoselection of the problem depending on parameters.
     """
     if params.algo.prob == 'rsa':
-        return logical_qubits_exp_mod(params, verb)
+        res = logical_qubits_exp_mod(params, verb)
     elif params.algo.prob == 'elliptic_log':
-        return logical_qubits_elliptic_mul(params, verb)
+        res = logical_qubits_elliptic_mul(params, verb)
     else:
         raise ValueError("Unknown problem type !")
+    if params.type == 'alice&bob3' and res % 2 == 1:
+        res += 1  # enforce even logical qubits for alice&bob3
+    return res

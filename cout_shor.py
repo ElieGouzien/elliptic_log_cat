@@ -32,6 +32,14 @@ DEF_RANGES = {'alice&bob2': dict(d1s=range(15),  # only indexes
                                  wes=range(2, 30),
                                  wms=range(2, 15),
                                  cs=range(1, 40)),
+              'alice&bob3': dict(d1s=range(15),  # only indexes
+                                 d2s=(None,),
+                                 # d and n are hard-coded!
+                                 ds=(22,),
+                                 ns=(21,),
+                                 wes=range(2, 30),
+                                 wms=range(2, 15),
+                                 cs=range(1, 40)),
               None: dict(d1s=(None,),
                          d2s=(None,),
                          ds=(None,),
@@ -48,8 +56,7 @@ def _calc_ranges(base_params: Params, **kwargs):
     """
     ranges = DEF_RANGES[base_params.type].copy()
     ranges.update(kwargs)
-    if (base_params.type == 'alice&bob2'
-            and base_params.algo.prob == 'elliptic_log'):
+    if base_params.algo.prob == 'elliptic_log':
         if ranges['cs'] != DEF_RANGES[base_params.type]['cs']:
             warn('No coset representation for elliptic_log ; removing the '
                  'exploration !')
@@ -90,7 +97,8 @@ def iterate(base_params: Params, progress=PB_DEF, **kwargs):
                 and wm is not None and we is not None and wm > we):
             continue
         # Elliptic curve addition trick require one more qubit in we.
-        if (base_params.algo.prob == 'elliptic_log' and we <= 2):
+        if (base_params.algo.prob == 'elliptic_log'
+                and we is not None and we <= 2):
             continue
         yield base_params._replace(
             algo=base_params.algo._replace(we=we, wm=wm, c=c),
@@ -203,8 +211,30 @@ def entree_tableau_rsa_alicebob2(params: Params):
             logical_qubits(params, False)]
 
 
+def entree_tableau_rsa_alicebob3(params: Params):
+    """Give a table line, for RSA and alice&bob3."""
+    err_corr = ErrCorrCode(params)
+    cost, qubits = prepare_ressources(params)
+    return [params.algo.n, err_corr.ne, params.algo.c, params.algo.we,
+            params.algo.wm, params.low_level.n, params.low_level.d,
+            params.low_level.d1, err_corr._nb_factory, err_corr._factory_qubits,
+            qubits, format_time(cost.t), format_time(cost.exp_t),
+            logical_qubits(params, False)]
+
+
 def entree_tableau_elliptic_log2(params: Params):
     """Give a table line, for elliptic curve logarithm and Alice&Bob2."""
+    err_corr = ErrCorrCode(params)
+    cost, qubits = prepare_ressources(params)
+    return [params.algo.n, err_corr.ne, params.algo.we, params.algo.wm,
+            params.low_level.n, params.low_level.d, params.low_level.d1,
+            err_corr._nb_factory, err_corr._factory_qubits, qubits,
+            format_time(cost.t), format_time(cost.exp_t),
+            logical_qubits(params, False)]
+
+
+def entree_tableau_elliptic_log3(params: Params):
+    """Give a table line, for elliptic curve logarithm and Alice&Bob3."""
     err_corr = ErrCorrCode(params)
     cost, qubits = prepare_ressources(params)
     return [params.algo.n, err_corr.ne, params.algo.we, params.algo.wm,
@@ -258,6 +288,23 @@ def _print_tableau_rsa_alicebob2(base_params: Params):
                    entetes, skip_size=(11, 12), seps=(2, 8))
 
 
+def _print_tableau_rsa_alicebob3(base_params: Params):
+    """Table for article, for RSA and alice&bob3."""
+    if base_params.type != 'alice&bob3' or base_params.algo.prob != 'rsa':
+        warn("Warning, parameters not compatible with the table; "
+             "columns might not correspond to what is expected!")
+    warn("Only one working point for error correction ; it might be overkill "
+         "for small numbers!")
+    entetes = ["$n$", '$n_e$', "$m$", "$w_e$", "$w_m$", r"$\alpha^2$",
+               "$d$", "$i$", r"$\#\text{factories}$", "factories qubits",
+               r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
+               "logical qubits"]
+    _print_tableau([128, 256, 512, 829, 1024, 2048],
+                   [10] + [1]*8, base_params,
+                   entree_tableau_rsa_alicebob3,
+                   entetes, skip_size=(11, 12), seps=(2, 8))
+
+
 def _print_tableau_elliptic_log2(base_params: Params):
     """Table for article, for ECDL and alice&bob2."""
     if (base_params.type != 'alice&bob2'
@@ -275,6 +322,25 @@ def _print_tableau_elliptic_log2(base_params: Params):
                    seps=(2, 7))
 
 
+def _print_tableau_elliptic_log3(base_params: Params):
+    """Table for article, for ECDL and alice&bob3."""
+    if (base_params.type != 'alice&bob3'
+            or base_params.algo.prob != 'elliptic_log'):
+        warn("Warning, parameters not compatible with the table; "
+             "columns might not correspond to what is expected!")
+    warn("Warning, for small n values, magical state preparation parameters "
+         "might not be adapted (too much precision)!")
+    warn("Only one working point for error correction ; it might be overkill "
+         "for small numbers!")
+    entetes = ["$n$", '$n_e$', "$w_e$", "$w_m$", r"$\alpha^2$", "$d$",
+               "$i$", r"$\#\text{factories}$", "factories qubits",
+               r"$n_{\text{qubits}}$", "$t$", r"$t_{\text{exp}}$",
+               "logical qubits"]
+    _print_tableau([64, 128, 256, 512], [1]*7, base_params,
+                   entree_tableau_elliptic_log3, entetes, skip_size=(10, 11),
+                   seps=(2, 7))
+
+
 def print_tableau(base_params: Params):
     r"""Table for article supplemental material, autoselection of table type.
 
@@ -284,23 +350,39 @@ def print_tableau(base_params: Params):
     """
     if base_params.type == 'alice&bob2' and base_params.algo.prob == 'rsa':
         _print_tableau_rsa_alicebob2(base_params)
+    elif base_params.type == 'alice&bob3' and base_params.algo.prob == 'rsa':
+        _print_tableau_rsa_alicebob3(base_params)
     elif (base_params.type == 'alice&bob2'
           and base_params.algo.prob == 'elliptic_log'):
         _print_tableau_elliptic_log2(base_params)
+    elif (base_params.type == 'alice&bob3'
+          and base_params.algo.prob == 'elliptic_log'):
+        _print_tableau_elliptic_log3(base_params)
     else:
         raise ValueError("No table for those parameters.")
 
 
 # %% Executable part
 if __name__ == '__main__':
-    params = Params('alice&bob2',
-                    AlgoOpts(prob='elliptic_log', algo='Shor', s=None, n=256,
-                             windowed=True, parallel_cnots=True),
-                    LowLevelOpts(tc=500e-9))
+    # params = Params('alice&bob2',
+    #                 AlgoOpts(prob='elliptic_log', algo='Shor', s=None, n=256,
+    #                          windowed=True, parallel_cnots=True),
+    #                 LowLevelOpts(tc=500e-9))
 
     # params = Params('alice&bob2',
     #                 AlgoOpts(n=2048, windowed=True, parallel_cnots=True),
     #                 LowLevelOpts(tc=500e-9))
+
+    params = Params('alice&bob3',
+                    AlgoOpts(n=2048, windowed=True, parallel_cnots=True,
+                             mesure_based_unlookup=True),
+                    LowLevelOpts(tc=900e-9, tr=None))
+
+    # params = Params('alice&bob3',
+    #                 AlgoOpts(prob='elliptic_log', algo='Shor', s=None, n=256,
+    #                          windowed=True, parallel_cnots=True,
+    #                          mesure_based_unlookup=True),
+    #                 LowLevelOpts(tc=900e-9, tr=None))
 
     print("\n"*2)
     print("Windowed arithmetics")

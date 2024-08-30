@@ -891,10 +891,10 @@ class AliceAndBob2(ToffoliBasedCode):
             accept_prob = 84e-2
         elif params.low_level.d1 == 1:
             d1 = 3
-            n1 = 3.93
+            n1 = 5.08
             err_prob = 1.02e-4
             time_steps = 29
-            time = 65.8e-6
+            time = 50.9e-6
             accept_prob = 7.45e-1
         elif params.low_level.d1 == 2:
             d1 = 3
@@ -1046,7 +1046,7 @@ class AliceAndBob2(ToffoliBasedCode):
         proc_only_qubits = sum(self._count_qubits(d, 2, log_qubits))
         # Remove qubits counted 2 times
         d_min = min(d, factory_dist)
-        self.proc_qubits = factory_qubits + proc_only_qubits - d_min*(d_min-1)
+        self.proc_qubits = factory_qubits + proc_only_qubits - (2*d_min-1 + 4)
 
     def look_unlookup(self, w=None, n=None):
         """Cost of lookup and unlookup (measurement-based or not)."""
